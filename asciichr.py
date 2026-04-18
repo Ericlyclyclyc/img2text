@@ -15,6 +15,17 @@ def image_to_asciichr(
     alpha_threshold: int = 128,
     invert: bool = False
 ) -> str:
+    """
+    将图片转换为彩色 ASCII 字符画（透明区域显示为空格）。
+
+    参数:
+        image_path: 图片路径（支持透明 PNG）
+        output_width: 输出字符宽度（ASCII字符个数）
+        char_set: 用于表示亮度的字符集
+        bg_color: 背景色（用于填充透明区域）
+        alpha_threshold: Alpha 通道阈值，低于此值视为透明（0~255）
+        invert: 是否反转亮度（True表示亮色用深色字符表示，反之亦然）
+    """
     # 1. 打开图片
     img = Image.open(image_path).convert("RGBA")
     r, g, b, a = img.split()

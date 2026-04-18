@@ -12,7 +12,7 @@ def image_to_braille(
     alpha_threshold: int = 128
 ) -> str:
     """
-    将图片转换为彩色盲文字符画，透明区域不显示任何点阵，每个字符带有对应区域的平均颜色
+    将图片转换为彩色盲文字符画（透明区域显示为空格）。
 
     参数:
         image_path: 图片路径（支持透明 PNG）
