@@ -5,17 +5,14 @@
     <img src="https://img.shields.io/github/stars/MurthiNext/img2text"/>
 </div>
 
-将图片转换为终端字符画的 Python 工具集，支持 **ASCII 字符**、**盲文点阵 (Braille)** 和 **半色块 (▀)** 三种风格，均保留原始图像颜色，并支持透明 PNG。
+将图片转换为终端字符画的命令行工具，支持 **ASCII 字符**、**盲文点阵 (Braille)** 和 **半色块 (▀)** 三种风格，均保留原始图像颜色，并支持透明 PNG。
 
 ## ✨ 特性
 
 - 🎨 **全彩色输出** – 使用 ANSI 转义序列为每个字符/色块设置前景色或背景色
 - 🖼️ **透明支持** – 自动识别透明区域，输出为空格并重置样式
-- 🔠 **三种渲染模式**
-  - **ASCII 字符** – 根据亮度映射到自定义字符集（默认 ` .:-=+*#%@`）
-  - **盲文点阵** – 利用 Unicode 盲文字符（U+2800~U+28FF）实现 2×4 分辨率压缩
-  - **彩色半块** – 使用 `▀` 字符，上/下像素分别对应前景/背景色，实现垂直双倍精度
-- ⚙️ **可调参数** – 输出宽度、对比度、锐化、自适应阈值（盲文模式）、背景色等
+- 🔠 **三种渲染模式** – 一次运行同时生成三种风格的字符画
+- ⚙️ **可调参数** – 输出宽度、对比度、锐化、自适应阈值（盲文模式）、透明度阈值等
 
 ## 📦 依赖
 
@@ -30,22 +27,39 @@
 pip install pillow numpy scipy
 ```
 
-## 🚀 快速开始
+## 🚀 命令行使用
 
-### 1. 克隆或下载代码
-将 `braille.py`、`colorblocks.py`、`asciichr.py`、`img2text.py` 放在同一目录。
-
-### 2. 准备图片
-例如图片名为 `1.png`。
-
-### 3. 运行示例
-直接执行 `img2text.py`（会生成三份结果并打印对比）：
+将 `braille.py`、`colorblocks.py`、`asciichr.py`、`img2text.py` 放在同一目录，执行：
 
 ```bash
-python img2text.py
+python img2text.py <图片路径> <输出宽度>
 ```
 
-或在代码中单独调用：
+或打包为 `img2text.exe` 后直接运行：
+
+```bash
+img2text.exe <图片路径> <输出宽度>
+```
+
+**示例**：
+
+```bash
+python img2text.py 1.png 80
+```
+
+### 输出说明
+
+- **终端显示**：三种风格的结果并排显示，每行依次为：ASCII 结果行 + 三个空格 + 盲文结果行 + 三个空格 + 半色块结果行
+- **文件保存**：
+  - `a.txt` – ASCII 字符画
+  - `b.txt` – 盲文字符画
+  - `c.txt` – 半色块字符画
+
+所有文件均以 UTF-8 编码保存，可直接在支持 ANSI 颜色的终端中查看或使用 `cat`/`type` 命令显示。
+
+## 📖 模块调用（可选）
+
+你也可以在 Python 脚本中单独调用各个模块：
 
 ```python
 from asciichr import image_to_asciichr
@@ -62,12 +76,9 @@ braille_lines = image_to_braille('1.png', output_width=80)
 block_lines = image_to_color_blocks('1.png', output_width=80)
 ```
 
-### 4. 保存到文件
-每个函数返回字符串列表，可写入 `.txt` 文件（注意终端需支持 ANSI 颜色）。
+### 函数签名
 
-## 📖 模块说明
-
-### `asciichr.py` – ASCII 字符画
+#### `asciichr.py`
 
 ```python
 image_to_asciichr(
@@ -88,7 +99,7 @@ image_to_asciichr(
 | `alpha_threshold` | Alpha > 此值视为不透明 |
 | `invert` | 是否反转亮度映射 |
 
-### `braille.py` – 盲文字符画
+#### `braille.py`
 
 ```python
 image_to_braille(
@@ -113,26 +124,24 @@ image_to_braille(
 | `k` | 阈值偏移系数，越大越容易点亮 |
 | `alpha_threshold` | 透明判定阈值 |
 
-### `colorblocks.py` – 半色块字符画
+#### `colorblocks.py`
 
 ```python
 image_to_color_blocks(
     image_path: str,
     output_width: int = 80,
     scale: float = 1.0,
-    bg_color: tuple = (0, 0, 0),
-    black_tolerance: float = 30.0
+    alpha_threshold: int = 128
 ) -> List[str]
 ```
 
 每个终端字符显示 **上下两个像素**（上像素作为前景色，下像素作为背景色，字符固定为 `▀`）。  
-若上下均为黑色（或接近背景色），则输出普通空格。
+透明区域（上下任一像素透明）输出为空格。
 
 | 参数 | 说明 |
 |------|------|
 | `scale` | 高度缩放系数（宽高比校正） |
-| `bg_color` | 背景色，也用于判定“黑色”的参考 |
-| `black_tolerance` | 颜色欧氏距离小于此值视为黑色 |
+| `alpha_threshold` | Alpha > 此值视为不透明 |
 
 ## 🖥️ 终端兼容性
 
@@ -142,19 +151,16 @@ image_to_color_blocks(
   - Linux (GNOME Terminal, Konsole, etc.)
 - 盲文字符需要终端字体支持 Unicode 范围 `U+2800–U+28FF`（现代终端基本都支持）。
 
-## 📄 示例输出
+## 📄 示例
 
-运行 `python img2text.py` 后会在控制台并列显示三种效果（由于 Markdown 无法渲染 ANSI 颜色，仅示意布局）：
+运行 `python img2text.py logo.png 100` 后，终端输出类似：
 
 ```
-ASCII结果行   Braille结果行   ColorBlock结果行
-...           ...            ...
+ASCII结果行   盲文结果行   半色块结果行
+...           ...         ...
 ```
 
-同时生成三个文本文件：
-- `ascii_result.txt`
-- `braille_result.txt`
-- `color_blocks_result.txt`
+同时生成 `a.txt`、`b.txt`、`c.txt` 三个文件。
 
 ## 🤝 贡献
 
