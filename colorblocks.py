@@ -5,7 +5,8 @@ def image_to_color_blocks(
     image_path: str,
     output_width: int = 80,
     scale: float = 1.0,
-    alpha_threshold: int = 128
+    alpha_threshold: int = 128,
+    colored: bool = True
 ) -> str:
     """
     将图片转换为彩色块字符画（透明区域显示为空格）。
@@ -15,6 +16,7 @@ def image_to_color_blocks(
         output_width: 输出字符宽度（每个字符代表 2x1 像素块）
         scale: 高度缩放因子（相对于宽度）
         alpha_threshold: Alpha 通道阈值，低于此值视为透明（0~255）
+        colored: 是否输出 ANSI 颜色代码，False 时输出纯字符（保留透明过滤）
     """
     # 1. 打开图片，保留 Alpha 通道
     img = Image.open(image_path).convert("RGBA")
@@ -46,19 +48,25 @@ def image_to_color_blocks(
 
             # 只有当上下两个像素都不透明时才绘制彩色块
             if not (top_alpha and bottom_alpha):
-                line_parts.append("\033[0m ")
+                line_parts.append("\033[0m " if colored else " ")
                 continue
 
             top_color = tuple(rgb_array[y, x])
             bottom_color = tuple(rgb_array[y+1, x])
 
-            # 构建 ANSI 颜色代码
-            codes = []
-            codes.append(f"\033[38;2;{top_color[0]};{top_color[1]};{top_color[2]}m")
-            codes.append(f"\033[48;2;{bottom_color[0]};{bottom_color[1]};{bottom_color[2]}m")
-            codes.append("▀")
-            line_parts.append("".join(codes))
+            if colored:
+                # 构建 ANSI 颜色代码
+                codes = []
+                codes.append(f"\033[38;2;{top_color[0]};{top_color[1]};{top_color[2]}m")
+                codes.append(f"\033[48;2;{bottom_color[0]};{bottom_color[1]};{bottom_color[2]}m")
+                codes.append("▀")
+                line_parts.append("".join(codes))
+            else:
+                line_parts.append("▀")
 
-        lines.append("".join(line_parts) + "\033[0m")
+        line = "".join(line_parts)
+        if colored:
+            line += "\033[0m"
+        lines.append(line)
 
     return lines

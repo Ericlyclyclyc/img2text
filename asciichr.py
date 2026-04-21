@@ -13,7 +13,8 @@ def image_to_asciichr(
     char_set: str = DEFAULT_CHARS,
     bg_color: tuple = (0, 0, 0),
     alpha_threshold: int = 128,
-    invert: bool = False
+    invert: bool = False,
+    colored: bool = True
 ) -> str:
     """
     将图片转换为彩色 ASCII 字符画（透明区域显示为空格）。
@@ -25,6 +26,7 @@ def image_to_asciichr(
         bg_color: 背景色（用于填充透明区域）
         alpha_threshold: Alpha 通道阈值，低于此值视为透明（0~255）
         invert: 是否反转亮度（True表示亮色用深色字符表示，反之亦然）
+        colored: 是否输出 ANSI 颜色代码，False 时输出纯字符（保留透明过滤）
     """
     # 1. 打开图片
     img = Image.open(image_path).convert("RGBA")
@@ -55,15 +57,22 @@ def image_to_asciichr(
         line_parts = []
         for x in range(pixel_width):
             if not alpha_resized[y, x]:
-                line_parts.append("\033[0m ")
+                # 透明区域：根据 colored 决定是否添加重置序列
+                line_parts.append("\033[0m " if colored else " ")
                 continue
             r_val, g_val, b_val = rgb_array[y, x]
             brightness = 0.299 * r_val + 0.587 * g_val + 0.114 * b_val
             if invert:
                 brightness = 255 - brightness
             ascii_char = get_char_for_brightness(brightness, char_set)
-            colored_char = f"\033[38;2;{r_val};{g_val};{b_val}m{ascii_char}"
+            if colored:
+                colored_char = f"\033[38;2;{r_val};{g_val};{b_val}m{ascii_char}"
+            else:
+                colored_char = ascii_char
             line_parts.append(colored_char)
-        lines.append("".join(line_parts) + "\033[0m")
+        line = "".join(line_parts)
+        if colored:
+            line += "\033[0m"
+        lines.append(line)
 
     return lines

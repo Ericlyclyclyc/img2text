@@ -9,7 +9,8 @@ def image_to_braille(
     contrast_factor: float = 1.5,
     sigma: float = 3.0,
     k: float = 0.4,
-    alpha_threshold: int = 128
+    alpha_threshold: int = 128,
+    colored: bool = True
 ) -> str:
     """
     将图片转换为彩色盲文字符画（透明区域显示为空格）。
@@ -22,6 +23,7 @@ def image_to_braille(
         sigma: 高斯滤波的sigma（控制局部区域大小）
         k: 阈值偏移系数（threshold = local_mean - k * local_std）
         alpha_threshold: Alpha 通道阈值，低于此值视为透明（0~255）
+        colored: 是否输出 ANSI 颜色代码，False 时输出纯字符（保留透明过滤）
     """
     # 1. 打开图片，保留 Alpha 通道
     img = Image.open(image_path).convert('RGBA')
@@ -78,7 +80,7 @@ def image_to_braille(
             # 检查当前 2x4 块是否主要为透明
             block_alpha = alpha_mask_resized[y:y+4, x:x+2]
             if block_alpha.size == 0 or np.sum(block_alpha) < 4:   # 少于4个不透明像素视为透明
-                line_parts.append("\033[0m ")   # 重置颜色 + 空格（完全透明）
+                line_parts.append("\033[0m " if colored else " ")
                 continue
 
             # 计算当前块的平均 RGB 颜色（仅使用不透明像素）
@@ -101,16 +103,20 @@ def image_to_braille(
 
             # 构建带颜色的盲文字符
             if mask == 0:
-                # 为保持颜色一致性，仍输出重置后的空格
-                line_parts.append("\033[0m ")
+                # 空白盲文：输出空格（保持颜色一致性）
+                line_parts.append("\033[0m " if colored else " ")
             else:
                 braille_char = chr(0x2800 + mask)
-                # 设置前景色，不设置背景色（使用终端默认背景）
-                colored_char = f"\033[38;2;{avg_color[0]};{avg_color[1]};{avg_color[2]}m{braille_char}"
+                if colored:
+                    colored_char = f"\033[38;2;{avg_color[0]};{avg_color[1]};{avg_color[2]}m{braille_char}"
+                else:
+                    colored_char = braille_char
                 line_parts.append(colored_char)
 
         # 行末重置样式并换行
-        lines = "".join(line_parts) + "\033[0m"
+        lines = "".join(line_parts)
+        if colored:
+            lines += "\033[0m"
         braille_lines.append(lines)
 
     return braille_lines
