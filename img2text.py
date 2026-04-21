@@ -1,10 +1,15 @@
 from colorblocks import image_to_color_blocks
 from braille import image_to_braille
 from asciichr import image_to_asciichr
+import sys
 
 if __name__ == "__main__":
-    img_path = '1.png'
-    width = 50
+    if len(sys.argv) != 3:
+        print("使用方法: img2text.exe <图片.png> <宽度>")
+        sys.exit(1)
+
+    img_path = sys.argv[1]
+    width = int(sys.argv[2])
 
     ascii_result = image_to_asciichr(
         image_path=img_path,
