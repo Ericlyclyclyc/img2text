@@ -4,7 +4,7 @@ from scipy.ndimage import gaussian_filter
 
 def image_to_braille(
     image_path: str,
-    output_width: int = 80,
+    output_width: int = 50,
     sharpen_strength: float = 1.2,
     contrast_factor: float = 1.5,
     sigma: float = 3.0,

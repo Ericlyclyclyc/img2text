@@ -3,7 +3,7 @@ import numpy as np
 
 def image_to_color_blocks(
     image_path: str,
-    output_width: int = 80,
+    output_width: int = 50,
     scale: float = 1.0,
     alpha_threshold: int = 128,
     colored: bool = True

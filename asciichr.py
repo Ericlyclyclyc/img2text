@@ -9,7 +9,7 @@ def get_char_for_brightness(brightness, char_set):
 
 def image_to_asciichr(
     image_path: str,
-    output_width: int = 80,
+    output_width: int = 50,
     char_set: str = DEFAULT_CHARS,
     bg_color: tuple = (0, 0, 0),
     alpha_threshold: int = 128,
