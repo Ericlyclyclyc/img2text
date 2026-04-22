@@ -9,22 +9,26 @@
 
 ## ✨ 特性
 
-- 🎨 **全彩色输出** – 使用 ANSI 转义序列为每个字符/色块设置前景色或背景色
+- 🎨 **全彩色输出** – 使用 ANSI 转义序列为每个字符/色块设置前景色或背景色（可选）
 - 🖼️ **透明支持** – 自动识别透明区域，输出为空格并重置样式
 - 🔠 **三种渲染模式** – 一次运行同时生成三种风格的字符画
-- ⚙️ **可调参数** – 输出宽度、对比度、锐化、自适应阈值（盲文模式）、透明度阈值等
+- ⚙️ **可调参数** – 输出宽度、透明度阈值、颜色开关等
+
+![Preview](./misc/preview.png)
+- 测试图片作者为CORE，若有侵权请联系删除。
 
 ## 📦 依赖
 
 - Python 3.7+
-- [Pillow](https://python-pillow.org) (PIL)
+- [Pillow](https://python-pillow.org)
 - [NumPy](https://numpy.org)
-- [SciPy](https://scipy.org)（仅 `braille.py` 需要）
+- [SciPy](https://scipy.org)（仅盲文模式需要）
+- [Click](https://click.palletsprojects.com/)（命令行解析）
 
 安装依赖：
 
 ```bash
-pip install pillow numpy scipy
+pip install pillow numpy scipy click
 ```
 
 ## 🚀 命令行使用
@@ -32,19 +36,35 @@ pip install pillow numpy scipy
 将 `braille.py`、`colorblocks.py`、`asciichr.py`、`img2text.py` 放在同一目录，执行：
 
 ```bash
-python img2text.py <图片路径> <输出宽度>
+python img2text.py [选项] <图片路径>
 ```
 
 或打包为 `img2text.exe` 后直接运行：
 
 ```bash
-img2text.exe <图片路径> <输出宽度>
+img2text.exe [选项] <图片路径>
 ```
 
-**示例**：
+### 参数说明
+
+| 参数 | 说明 |
+|------|------|
+| `图片路径` | 必需，待转换的图片文件（支持 PNG、JPEG 等） |
+| `-w, --width` | 输出字符宽度，默认 50 |
+| `-a, --alpha_threshold` | Alpha 通道阈值（0-255），低于此值视为透明，默认 128 |
+| `-c, --colored` | 标志，加上后输出带 ANSI 颜色的字符画；不加则输出纯文本 |
+
+### 示例
 
 ```bash
-python img2text.py 1.png 80
+# 宽度 80，使用默认透明度阈值，无颜色
+python img2text.py logo.png -w 80
+
+# 启用颜色，宽度 100，透明度阈值 200
+python img2text.py logo.png -w 100 -a 200 -c
+
+# 简写形式
+python img2text.py logo.png -w 60 -c
 ```
 
 ### 输出说明
@@ -59,101 +79,34 @@ python img2text.py 1.png 80
 
 ## 📖 模块调用（可选）
 
-你也可以在 Python 脚本中单独调用各个模块：
+你也可以在 Python 脚本中单独调用各个模块，所有函数均支持 `colored` 参数。
 
 ```python
 from asciichr import image_to_asciichr
 from braille import image_to_braille
 from colorblocks import image_to_color_blocks
 
-# ASCII 模式
-ascii_lines = image_to_asciichr('1.png', output_width=80)
+# 无颜色输出
+ascii_lines = image_to_asciichr('1.png', output_width=80, colored=False)
 
-# 盲文模式
-braille_lines = image_to_braille('1.png', output_width=80)
-
-# 半块模式
-block_lines = image_to_color_blocks('1.png', output_width=80)
+# 彩色输出
+braille_lines = image_to_braille('1.png', output_width=80, colored=True)
 ```
 
-### 函数签名
-
-#### `asciichr.py`
-
-```python
-image_to_asciichr(
-    image_path: str,
-    output_width: int = 80,
-    char_set: str = " .:-=+*#%@",
-    bg_color: tuple = (0, 0, 0),
-    alpha_threshold: int = 128,
-    invert: bool = False
-) -> List[str]
-```
-
-| 参数 | 说明 |
-|------|------|
-| `output_width` | 输出字符宽度（像素/列数） |
-| `char_set` | 亮度映射的字符集（由暗到亮） |
-| `bg_color` | 透明区域填充的背景色 (R,G,B) |
-| `alpha_threshold` | Alpha > 此值视为不透明 |
-| `invert` | 是否反转亮度映射 |
-
-#### `braille.py`
-
-```python
-image_to_braille(
-    image_path: str,
-    output_width: int = 80,
-    sharpen_strength: float = 1.2,
-    contrast_factor: float = 1.5,
-    sigma: float = 3.0,
-    k: float = 0.4,
-    alpha_threshold: int = 128
-) -> List[str]
-```
-
-每个盲文字符对应原始图像的 **2 像素宽 × 4 像素高** 区域。  
-使用自适应阈值（局部均值 − k×局部标准差）生成点阵。
-
-| 参数 | 说明 |
-|------|------|
-| `sharpen_strength` | 锐化强度，>1 增强边缘 |
-| `contrast_factor` | 对比度因子 |
-| `sigma` | 高斯滤波标准差（决定局部区域大小） |
-| `k` | 阈值偏移系数，越大越容易点亮 |
-| `alpha_threshold` | 透明判定阈值 |
-
-#### `colorblocks.py`
-
-```python
-image_to_color_blocks(
-    image_path: str,
-    output_width: int = 80,
-    scale: float = 1.0,
-    alpha_threshold: int = 128
-) -> List[str]
-```
-
-每个终端字符显示 **上下两个像素**（上像素作为前景色，下像素作为背景色，字符固定为 `▀`）。  
-透明区域（上下任一像素透明）输出为空格。
-
-| 参数 | 说明 |
-|------|------|
-| `scale` | 高度缩放系数（宽高比校正） |
-| `alpha_threshold` | Alpha > 此值视为不透明 |
+各函数的详细参数请参考源码中的 docstring。
 
 ## 🖥️ 终端兼容性
 
-- 需要支持 **真彩色**（24-bit ANSI 颜色）的终端：
+- 使用彩色模式（`-C`）时，需要终端支持 **真彩色**（24-bit ANSI 颜色）：
   - Windows Terminal (>=1.0)
   - macOS Terminal (iTerm2, Terminal.app 支持较好)
   - Linux (GNOME Terminal, Konsole, etc.)
 - 盲文字符需要终端字体支持 Unicode 范围 `U+2800–U+28FF`（现代终端基本都支持）。
+- 无颜色模式（纯文本）可在任何终端下正常显示。
 
-## 📄 示例
+## 📄 示例输出
 
-运行 `python img2text.py logo.png 100` 后，终端输出类似：
+运行 `img2text.exe logo.png -w 80 -c` 后，终端输出类似：
 
 ```
 ASCII结果行   盲文结果行   半色块结果行
