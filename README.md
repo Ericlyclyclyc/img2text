@@ -99,7 +99,7 @@ braille_lines = image_to_braille('1.png', output_width=80, colored=True)
 
 ## 🖥️ 终端兼容性
 
-- 使用彩色模式（`-C`）时，需要终端支持 **真彩色**（24-bit ANSI 颜色）：
+- 使用彩色模式（`-c`）时，需要终端支持 **真彩色**（24-bit ANSI 颜色）：
   - Windows Terminal (>=1.0)
   - macOS Terminal (iTerm2, Terminal.app 支持较好)
   - Linux (GNOME Terminal, Konsole, etc.)
