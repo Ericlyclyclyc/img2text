@@ -1,8 +1,10 @@
 # Img2Text 图片转彩色字符画
 <div align=left>
-    <img src="https://img.shields.io/badge/python-3.7%2B-blue"/>
-    <img src="https://img.shields.io/github/license/MurthiNext/img2text"/>
-    <img src="https://img.shields.io/github/stars/MurthiNext/img2text"/>
+   <img src="https://img.shields.io/github/v/release/MurthiNext/img2text">
+   <img src="https://img.shields.io/badge/python-3.7%2B-blue">
+   <img src="https://img.shields.io/github/license/MurthiNext/img2text">
+   <img src="https://img.shields.io/github/downloads/MurthiNext/img2text/total">
+   <img src="https://img.shields.io/github/stars/MurthiNext/img2text">
 </div>
 
 将图片转换为终端字符画的命令行工具，支持 **ASCII 字符**、**盲文点阵 (Braille)** 和 **半色块 (▀)** 三种风格，均保留原始图像颜色，并支持透明 PNG。
